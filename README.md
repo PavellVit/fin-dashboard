@@ -1,59 +1,30 @@
 # FinDashboard
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.2.
+[![CI](https://github.com/PavellVit/fin-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/PavellVit/fin-dashboard/actions/workflows/ci.yml)
 
-## Development server
+Realtime fintech dashboard: Angular 22 with a WebAssembly (AssemblyScript) market-data producer running in a Web Worker.
 
-To start a local development server, run:
+- **Live demo:** https://fin-dashboard-ruby.vercel.app/
+- **Repository:** https://github.com/PavellVit/fin-dashboard
 
-```bash
-ng serve
-```
+## Build / Run / Test
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+Requires Node 24 (see `.nvmrc`).
 
 ```bash
-ng generate component component-name
+nvm use
+npm ci
+npm start            # dev server on http://localhost:4200
+npm run build        # production build -> dist/fin-dashboard/browser
+npm test             # unit tests (Vitest), watch mode
+npm run test:ci      # single test run, as in CI
+npm run lint         # ESLint (angular-eslint)
+npm run format       # Prettier; CI runs format:check
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## CI / Deployment
 
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- **CI:** GitHub Actions (`.github/workflows/ci.yml`) on every push and PR: format check -> lint -> build -> tests.
+- **Deploy:** Vercel builds every push with `npm run build` (pinned in `vercel.json`). Deploys are not gated by CI: a failing work-in-progress test never blocks the live demo, and the CI status is visible on every commit.
+- **Push -> live:** measured ~30 s of build time; the new version is served a few seconds later.
+- **Wasm MIME type:** Vercel serves `.wasm` as `application/wasm` (verified with `curl -I`).
