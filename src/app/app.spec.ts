@@ -3,9 +3,26 @@ import { App } from './app';
 
 describe('App', () => {
   beforeEach(async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        headers: { get: () => 'application/wasm' },
+        arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+      }),
+    );
+    vi.spyOn(WebAssembly, 'instantiate').mockResolvedValue({
+      instance: { exports: { add: () => 42 } },
+    } as never);
+
     await TestBed.configureTestingModule({
       imports: [App],
     }).compileComponents();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it('should create the app', () => {
