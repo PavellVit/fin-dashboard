@@ -1,0 +1,17 @@
+{
+  "options": { "runtime": "stub" },
+  "targets": {
+    "debug": {
+      "outFile": "build/debug.wasm",
+      "textFile": "build/debug.wat",
+      "sourceMap": true,
+      "debug": true
+    },
+    "release": {
+      "outFile": "public/producer.wasm",
+      "optimizeLevel": 3,
+      "shrinkLevel": 1,
+      "noAssert": true
+    }
+  }
+}
