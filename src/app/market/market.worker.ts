@@ -1,10 +1,12 @@
 /// <reference lib="webworker" />
-import { loadGenerator } from './wasm-loader';
+import { loadGenerator, readBatch } from './wasm-loader';
 
 addEventListener('message', async ({ data }) => {
   try {
     const g = await loadGenerator(data.wasmUrl);
-    postMessage({ ok: g.add(1, 2) });
+    g.init(5, 42);
+    const n = g.generateBatch(3);
+    postMessage({ ok: Array.from(readBatch(g, n)) });
   } catch (e) {
     postMessage({ error: e instanceof Error ? e.message : String(e) });
   }

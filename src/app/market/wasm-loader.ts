@@ -1,5 +1,11 @@
 export interface GeneratorExports {
-  add: (a: number, b: number) => number;
+  memory: WebAssembly.Memory;
+  init(instrumentCount: number, seed: number): void;
+  generateBatch(count: number): number;
+  getBatchPointer(): number;
+  getBatchCapacity(): number;
+  getFieldCount(): number;
+  getMidCents(index: number): number;
 }
 
 export const wasmImports: WebAssembly.Imports = {
@@ -31,4 +37,8 @@ export async function loadGenerator(url: string): Promise<GeneratorExports> {
   const bytes: BufferSource = await res.arrayBuffer();
 
   return instantiateGenerator(bytes);
+}
+
+export function readBatch(g: GeneratorExports, n: number): Int32Array {
+  return new Int32Array(g.memory.buffer, g.getBatchPointer(), n * g.getFieldCount());
 }
