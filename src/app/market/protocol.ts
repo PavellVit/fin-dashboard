@@ -18,12 +18,12 @@ export interface InstrumentRow {
   imbalance: number | null;
 }
 
-// Every message carries runId, so results of a previous run can be rejected
+// A worker serves one run: it gets one start, then pause/resume
 export type ToWorker =
-  | { type: 'start'; runId: number; settings: ProducerSettings; wasmUrl: string; seed: number }
-  | { type: 'pause'; runId: number }
-  | { type: 'resume'; runId: number };
+  | { type: 'start'; settings: ProducerSettings; wasmUrl: string; seed: number }
+  | { type: 'pause' }
+  | { type: 'resume' };
 
 export type FromWorker =
-  | { type: 'snapshot'; runId: number; status: ProducerStatus; rows: InstrumentRow[] }
-  | { type: 'error'; runId: number; phase: 'init' | 'run'; message: string };
+  | { type: 'snapshot'; status: ProducerStatus; rows: InstrumentRow[] }
+  | { type: 'error'; phase: 'init' | 'run'; message: string };

@@ -8,8 +8,8 @@ export const FLUSH_MS = 100;
 
 // The whole producer loop without worker globals: `post` and `load` are injected,
 // timers are the global setTimeout, so tests drive them with fake timers.
+// One run per instance: the service creates a new worker for every run.
 export class ProducerCore {
-  private runId = 0;
   private state: ProducerState = 'idle';
   private generator: GeneratorExports | null = null;
   private accs: Acc[] = [];
@@ -27,11 +27,10 @@ export class ProducerCore {
 
   async handle(m: ToWorker): Promise<void> {
     if (m.type === 'start') {
-      return this.start(m);
-    }
-
-    if (m.runId !== this.runId) {
-      return; // a command for a previous run
+      if (this.state === 'idle') {
+        await this.start(m); // a repeated start is ignored
+      }
+      return;
     }
 
     if (m.type === 'pause' && this.state === 'running') {
@@ -46,32 +45,17 @@ export class ProducerCore {
   }
 
   private async start(m: Extract<ToWorker, { type: 'start' }>): Promise<void> {
-    this.clearTick(); // stop the previous run's loop
-    this.clearFlush();
-    this.generator = null;
-
-    // New settings start the run with empty metrics
-    this.runId = m.runId;
     this.state = 'initializing';
     this.updatesPerBatch = m.settings.updatesPerBatch;
     this.intervalMs = m.settings.batchIntervalMs;
-    this.batches = 0;
-    this.updates = 0;
     this.accs = createAccs(m.settings.instrumentCount);
 
     try {
       const g = await this.load(m.wasmUrl);
-
-      if (m.runId !== this.runId) {
-        return; // superseded while loading
-      }
-
       g.init(m.settings.instrumentCount, m.seed);
       this.generator = g;
     } catch (e) {
-      if (m.runId === this.runId) {
-        this.fail('init', e); // a superseded run stays silent
-      }
+      this.fail('init', e);
       return;
     }
 
@@ -111,7 +95,6 @@ export class ProducerCore {
     this.clearFlush();
     this.post({
       type: 'snapshot',
-      runId: this.runId,
       status: this.status(),
       rows: toRows(SYMBOLS, this.accs),
     });
@@ -131,7 +114,6 @@ export class ProducerCore {
     this.state = 'error';
     this.post({
       type: 'error',
-      runId: this.runId,
       phase,
       message: e instanceof Error ? e.message : String(e),
     });

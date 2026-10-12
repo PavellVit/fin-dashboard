@@ -83,3 +83,5 @@ export const toRow = (symbol: string, a: Acc): InstrumentRow => ({
 
 export const toRows = (symbols: readonly string[], accs: Acc[]): InstrumentRow[] =>
   accs.map((a, i) => toRow(symbols[i], a));
+
+export const emptyRow = (symbol: string): InstrumentRow => toRow(symbol, createAcc());

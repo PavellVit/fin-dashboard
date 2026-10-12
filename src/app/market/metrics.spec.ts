@@ -1,4 +1,13 @@
-import { FIELDS, applyBatch, createAccs, imbalance, toRow } from './metrics';
+import {
+  FIELDS,
+  applyBatch,
+  createAcc,
+  createAccs,
+  emptyRow,
+  imbalance,
+  toRow,
+  vwapCents,
+} from './metrics';
 
 // Fixtures use the Wasm batch layout: 7 numbers per update
 // [instrument, priceCents, tradeQuantity, bidCents, askCents, bidQuantity, askQuantity]
@@ -22,6 +31,18 @@ describe('metrics', () => {
     expect(r.vwapCents).toBe(10150); // 406000 / 40 = $101.50
     expect(r.spreadCents).toBe(4); // $0.04
     expect(r.imbalance).toBeCloseTo(0.2);
+  });
+
+  it('before any data: unavailable values and zero volume', () => {
+    expect(emptyRow('ALFA')).toEqual({
+      symbol: 'ALFA',
+      lastPriceCents: null,
+      spreadCents: null,
+      volume: 0,
+      vwapCents: null,
+      imbalance: null,
+    });
+    expect(vwapCents(createAcc())).toBeNull();
   });
 
   it('zero book: imbalance unavailable, other metrics present', () => {
