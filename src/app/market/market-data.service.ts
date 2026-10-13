@@ -1,7 +1,7 @@
-import { DestroyRef, Injectable, inject, signal } from '@angular/core';
+import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
 import { emptyRow } from './metrics';
 import type { FromWorker, InstrumentRow, ProducerStatus, ToWorker } from './protocol';
-import { DEFAULT_SETTINGS, type ProducerSettings } from './settings';
+import { DEFAULT_SETTINGS, nominalRate, type ProducerSettings } from './settings';
 import { SYMBOLS } from './symbols';
 
 const IDLE: ProducerStatus = { state: 'idle', batches: 0, updates: 0 };
@@ -12,10 +12,13 @@ const emptyRows = (count: number): InstrumentRow[] => SYMBOLS.slice(0, count).ma
 // One instance per app, so navigation never creates producers; a worker exists only after apply()
 @Injectable({ providedIn: 'root' })
 export class MarketDataService {
+  private readonly _settings = signal<ProducerSettings>(DEFAULT_SETTINGS);
   private readonly _rows = signal<InstrumentRow[]>(emptyRows(DEFAULT_SETTINGS.instrumentCount));
   private readonly _status = signal<ProducerStatus>(IDLE);
   private readonly _error = signal<string | null>(null);
 
+  readonly settings = this._settings.asReadonly(); // the applied settings, not a form draft
+  readonly nominalRate = computed(() => nominalRate(this._settings()));
   readonly rows = this._rows.asReadonly();
   readonly status = this._status.asReadonly();
   readonly error = this._error.asReadonly();
@@ -30,6 +33,7 @@ export class MarketDataService {
   // Always a new run: new worker, empty rows, even from paused and with the same settings
   apply(settings: ProducerSettings): void {
     this.dispose(); // the replaced producer is terminated right away
+    this._settings.set(settings);
     this._rows.set(emptyRows(settings.instrumentCount));
     this._status.set({ ...IDLE, state: 'initializing' });
     this._error.set(null);
@@ -77,6 +81,10 @@ export class MarketDataService {
 
   resume(): void {
     this.post({ type: 'resume' });
+  }
+
+  retry(): void {
+    this.apply(this._settings());
   }
 
   private post(m: ToWorker): void {

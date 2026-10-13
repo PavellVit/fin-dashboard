@@ -1,0 +1,27 @@
+form {
+  display: grid;
+  gap: 12px;
+  max-width: 360px;
+}
+
+label {
+  display: grid;
+  gap: 4px;
+}
+
+.error {
+  color: #b91c1c;
+}
+
+[aria-invalid='true'] {
+  border-color: #b91c1c;
+}
+
+.rate {
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}

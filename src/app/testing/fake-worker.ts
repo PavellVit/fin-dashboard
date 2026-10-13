@@ -1,5 +1,15 @@
 import type { FromWorker, InstrumentRow, ProducerStatus, ToWorker } from '../market/protocol';
 
+// Replaces the global Worker with FakeWorker around every test of the calling suite.
+// Call it before any beforeEach that calls apply(): hooks run in registration order.
+export function useFakeWorker(): void {
+  beforeEach(() => {
+    FakeWorker.reset();
+    vi.stubGlobal('Worker', FakeWorker);
+  });
+  afterEach(() => vi.unstubAllGlobals());
+}
+
 // Stands in for the global Worker in specs: records posted messages, lets a test emit replies
 export class FakeWorker implements Pick<
   Worker,

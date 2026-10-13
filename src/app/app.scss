@@ -1,0 +1,22 @@
+:host {
+  display: block;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 16px;
+  font-family: system-ui, sans-serif;
+}
+
+nav {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  a {
+    color: inherit;
+  }
+
+  .active {
+    font-weight: 600;
+    text-decoration: none;
+  }
+}

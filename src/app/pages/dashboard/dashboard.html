@@ -1,0 +1,59 @@
+@let state = svc.status().state;
+<h1>Dashboard</h1>
+
+<section class="status" [attr.data-state]="state">
+  <span class="pill" role="status">{{ state }}</span>
+  <span>
+    {{ svc.settings().instrumentCount }} instruments · {{ svc.settings().updatesPerBatch }} upd /
+    {{ svc.settings().batchIntervalMs }} ms
+  </span>
+  <span>{{ svc.nominalRate() | number: '1.0-1' }} upd/s nominal</span>
+  <span>
+    {{ svc.status().batches | number }} batches · {{ svc.status().updates | number }} updates
+  </span>
+  <!-- One toggle, so focus stays on it when the label switches -->
+  <button
+    type="button"
+    [disabled]="state !== 'running' && state !== 'paused'"
+    (click)="state === 'paused' ? svc.resume() : svc.pause()"
+  >
+    {{ state === 'paused' ? 'Resume' : 'Pause' }}
+  </button>
+</section>
+
+@if (svc.error(); as message) {
+  <div role="alert" class="error">
+    {{ message }}
+    <button type="button" (click)="svc.retry()">Retry</button>
+  </div>
+}
+
+<div class="table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Symbol</th>
+        <th scope="col">Last price</th>
+        <th scope="col">Spread</th>
+        <th scope="col">Volume</th>
+        <th scope="col">VWAP</th>
+        <th scope="col">Imbalance</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Prices stay in cents in state; dividing and rounding happen only here, for display -->
+      @for (row of svc.rows(); track row.symbol) {
+        <tr>
+          <th scope="row">{{ row.symbol }}</th>
+          <td>
+            {{ row.lastPriceCents === null ? '—' : (row.lastPriceCents / 100 | currency: 'USD') }}
+          </td>
+          <td>{{ row.spreadCents === null ? '—' : (row.spreadCents / 100 | currency: 'USD') }}</td>
+          <td>{{ row.volume | number }}</td>
+          <td>{{ row.vwapCents === null ? '—' : (row.vwapCents / 100 | currency: 'USD') }}</td>
+          <td>{{ row.imbalance === null ? '—' : (row.imbalance | number: '1.2-2') }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

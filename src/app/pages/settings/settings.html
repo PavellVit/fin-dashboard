@@ -1,0 +1,46 @@
+<h1>Settings</h1>
+
+<form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+  @for (f of fields; track f.key) {
+    @let control = form.controls[f.key];
+    @let errors = control.dirty || control.touched ? control.errors : null;
+    <label>
+      {{ f.label }} ({{ limits[f.key].min }}–{{ limits[f.key].max }})
+      <input
+        type="number"
+        step="1"
+        [formControlName]="f.key"
+        [attr.min]="limits[f.key].min"
+        [attr.max]="limits[f.key].max"
+        [attr.aria-invalid]="control.invalid"
+      />
+      @if (errors; as e) {
+        <small class="error" role="alert">
+          @if (e['required']) {
+            Required
+          } @else if (e['integer']) {
+            Must be an integer
+          } @else if (e['min']) {
+            Min {{ e['min'].min }}
+          } @else if (e['max']) {
+            Max {{ e['max'].max }}
+          }
+        </small>
+      }
+    </label>
+  }
+
+  <p class="rate">
+    Nominal rate:
+    @if (draftRate !== null) {
+      {{ draftRate | number: '1.0-1' }} updates/s across all instruments
+    } @else {
+      —
+    }
+  </p>
+
+  <div class="actions">
+    <button type="submit" [disabled]="form.invalid">Apply</button>
+    <button type="button" (click)="resetToDefaults()">Reset to defaults</button>
+  </div>
+</form>

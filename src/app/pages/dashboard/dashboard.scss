@@ -1,0 +1,52 @@
+.status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.pill {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e5e7eb;
+}
+
+[data-state='running'] .pill {
+  background: #bbf7d0;
+}
+
+[data-state='paused'] .pill {
+  background: #fef08a;
+}
+
+[data-state='error'] .pill,
+.error {
+  background: #fecaca;
+}
+
+.error {
+  padding: 8px 12px;
+  margin-bottom: 12px;
+}
+
+.table-scroll {
+  overflow-x: auto; // narrow screens scroll the table, not the page
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+th,
+td {
+  padding: 4px 8px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: right;
+}
+
+th:first-child {
+  text-align: left;
+}

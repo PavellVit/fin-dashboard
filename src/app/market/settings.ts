@@ -7,6 +7,15 @@ export interface ProducerSettings {
 export const DEFAULT_SETTINGS: ProducerSettings = {
   instrumentCount: 5,
   updatesPerBatch: 100,
-  // TODO: restore 500 (the task's default); 1000 only slows down the temporary console output
-  batchIntervalMs: 1000,
+  batchIntervalMs: 500,
 };
+
+export const SETTINGS_LIMITS = {
+  instrumentCount: { min: 1, max: 50 },
+  updatesPerBatch: { min: 1, max: 1000 },
+  batchIntervalMs: { min: 50, max: 2000 },
+} as const;
+
+// Updates per second across all instruments (not per instrument)
+export const nominalRate = (s: ProducerSettings): number =>
+  (s.updatesPerBatch / s.batchIntervalMs) * 1000;

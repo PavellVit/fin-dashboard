@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { FakeWorker, snapshot } from '../testing/fake-worker';
+import { FakeWorker, snapshot, useFakeWorker } from '../testing/fake-worker';
 import { MarketDataService } from './market-data.service';
 import { emptyRow } from './metrics';
 import type { InstrumentRow } from './protocol';
@@ -13,22 +13,19 @@ const SETTINGS: ProducerSettings = {
 const alfa = (patch: Partial<InstrumentRow>): InstrumentRow => ({ ...emptyRow('ALFA'), ...patch });
 
 describe('MarketDataService', () => {
+  useFakeWorker();
   let svc: MarketDataService;
 
   beforeEach(() => {
-    FakeWorker.reset();
-    vi.stubGlobal('Worker', FakeWorker);
     svc = TestBed.inject(MarketDataService);
   });
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
-    vi.useRealTimers();
-  });
+  afterEach(() => vi.useRealTimers());
 
   it('injecting the service creates no producer', () => {
     expect(FakeWorker.instances).toHaveLength(0);
     expect(svc.status().state).toBe('idle');
+    expect(svc.settings()).toEqual(DEFAULT_SETTINGS);
     expect(svc.rows()).toEqual(['ALFA', 'BETA', 'GAMMA', 'DELTA', 'EPSILON'].map(emptyRow));
   });
 
@@ -44,6 +41,22 @@ describe('MarketDataService', () => {
         seed: expect.any(Number),
       },
     ]);
+  });
+
+  it('apply stores the applied settings; the nominal rate follows them', () => {
+    const fast = { instrumentCount: 3, updatesPerBatch: 1000, batchIntervalMs: 50 };
+    svc.apply(fast);
+    expect(svc.settings()).toEqual(fast);
+    expect(svc.nominalRate()).toBe(20_000); // updates per second across all instruments
+  });
+
+  it('retry re-applies the current settings', () => {
+    svc.apply(SETTINGS);
+    FakeWorker.last.emit({ type: 'error', phase: 'init', message: 'x' });
+    svc.retry();
+    expect(FakeWorker.instances).toHaveLength(2);
+    expect(FakeWorker.last.sent[0]).toMatchObject({ type: 'start', settings: SETTINGS });
+    expect(svc.error()).toBeNull();
   });
 
   it('apply replaces the worker and terminates the previous one', () => {
